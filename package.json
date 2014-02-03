@@ -1,0 +1,22 @@
+{
+  "name": "ti-testflight-hook",
+  "version": "0.0.1",
+  "description": "hook ti cli for deploy testflight builds",
+  "scripts": {
+    "install": "node bin/install"
+  },
+  "keywords": [
+    "titanium",
+    "cli",
+    "appcelerator",
+    "hook",
+    "testflight"
+  ],
+  "author": "David Bankier <david@yydigital.com> (http://www.yydigital.com)",
+  "license": "MIT",
+  "dependencies": {
+    "underscore": "~1.5.2",
+    "form-data": "~0.1.2",
+    "fields": "~0.1.12"
+  }
+}
