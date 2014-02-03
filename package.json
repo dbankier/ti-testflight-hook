@@ -1,7 +1,7 @@
 {
   "name": "ti-testflight-hook",
   "version": "0.0.1",
-  "description": "hook ti cli for deploy testflight builds",
+  "description": "ti cli hook for deploying testflight builds",
   "scripts": {
     "install": "node bin/install"
   },
@@ -12,6 +12,10 @@
     "hook",
     "testflight"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dbankier/ti-testflight-hook.git"
+  },
   "author": "David Bankier <david@yydigital.com> (http://www.yydigital.com)",
   "license": "MIT",
   "dependencies": {
