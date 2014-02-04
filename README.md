@@ -28,7 +28,7 @@ These are optional:
 
 **You will be prompted for the release notes.**
 
-Then uses the `--testflight` flag with the titanium cli. For example:
+Then use the `--testflight` flag with the titanium cli to upload to TestFlight. For example:
 
 ~~~
 $ ti build -p ios -F ipad -T dist-adhoc --testflight
