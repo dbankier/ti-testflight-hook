@@ -11,7 +11,7 @@ $ npm install -g ti-testflight-hook
 If you install with `sudo` and get the error `Unable to write config file...` use the following command:
 
 ```
-sudo npm install -g ti-testflight-hook --unsafe-perm
+$ sudo npm install -g ti-testflight-hook --unsafe-perm
 ```
 
 ## Usage
