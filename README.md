@@ -14,6 +14,13 @@ If you install with `sudo` and get the error `Unable to write config file...` us
 $ sudo npm install -g ti-testflight-hook --unsafe-perm
 ```
 
+Or if you are concerned about using the `--unsafe-perm` flag, use the following command after install
+to install the hook instead:
+
+```
+$ ti-testflight-hook
+```
+
 ## Usage
 
 Then you can added the following, e.g. to your tiapp.xml file.

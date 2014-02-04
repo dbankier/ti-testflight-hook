@@ -1,9 +1,12 @@
 {
   "name": "ti-testflight-hook",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "ti cli hook for deploying testflight builds",
   "scripts": {
     "postinstall": "node bin/install"
+  },
+  "bin": {
+    "ti-testflight-hook": "./bin/install"
   },
   "keywords": [
     "titanium",
