@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "ti cli hook for deploying testflight builds",
   "scripts": {
-    "install": "node bin/install"
+    "postinstall": "node bin/install"
   },
   "keywords": [
     "titanium",

@@ -5,8 +5,14 @@ A titanium cli hook for deploying TestFlight builds.
 ## Installation
 
 ~~~
-$ [sudo] npm install -g ti-testflight-hook
+$ npm install -g ti-testflight-hook
 ~~~
+
+If you install with `sudo` and get the error `Unable to write config file...` use the following command:
+
+```
+sudo npm install -g ti-testflight-hook --unsafe-perm
+```
 
 ## Usage
 
