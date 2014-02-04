@@ -13,6 +13,6 @@ var xspawn = function(cmd,args) {
 var hooks = xspawn('ti', ['config','-a','paths.hooks',path.join( __dirname ,'..', 'plugin','yy.titestflight','hooks')]);
 hooks.stderr.pipe(process.stderr);
 hooks.on("exit", function(code) {
-  code === 0 && console.log("ticonfig hook installed");
+  code === 0 && console.log("ti-testflight-hook hook installed");
 });
 
