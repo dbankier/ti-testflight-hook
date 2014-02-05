@@ -1,6 +1,6 @@
 {
   "name": "ti-testflight-hook",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "ti cli hook for deploying testflight builds",
   "scripts": {
     "postinstall": "node bin/install"
@@ -24,6 +24,7 @@
   "dependencies": {
     "underscore": "~1.5.2",
     "form-data": "~0.1.2",
-    "fields": "~0.1.12"
+    "fields": "~0.1.12",
+    "node-appc": "~0.2.0"
   }
 }

@@ -1,8 +1,9 @@
 var _ = require("underscore"),
-fs = require("fs"),
-path = require("path"),
-Form = require("form-data"),
-fields = require("fields");
+    fs = require("fs"),
+    afs = require("node-appc").fs,
+    path = require("path"),
+    Form = require("form-data"),
+    fields = require("fields");
 
 exports.cliVersion = '>=3.2';
 var logger;
@@ -59,7 +60,7 @@ function doTestFlight(data, finished) {
     _.keys(tf).forEach(function(k) {
       form.append(k, tf[k]);
     });
-    var build_file =path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa"));
+    var build_file =afs.resolvePath(path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa")));
     form.append('file', fs.createReadStream(build_file));
    
     logger.info("Uploading...");
