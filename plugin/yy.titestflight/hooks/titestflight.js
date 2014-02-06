@@ -44,19 +44,43 @@ function doTestFlight(data, finished) {
     return;
   } 
   tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists');
-  tf.notify = tf.notify ? "True" : "False";
-  var prompt = fields.set({
-    text: fields.text({
-      title:"\nNotes",
-      desc: "Enter release notes",
+  var f = {
+    notes: fields.text({
+      title: "Release Notes",
+      desc: "Enter released notes. Required.",
       validate: function(value,callback) {
         callback(!value.length, value);
       }
     })
-  });
+  };
+  if (tf.notify === undefined) {
+    f.notify= fields.select({
+      title: "Notify",
+      desc: "Notify list on upload",
+      promptLabel:"(y,n)",
+      options: ['__y__es','__n__o'],
+    });
+  } 
+  if (tf.distribution_lists === undefined) {
+    f.distribution_lists = fields.text({
+      title: "Distribution Lists",
+      desc: "Enter a comma separated list (or leave empty)"
+    })
+  }
+  var prompt = fields.set(f);
+
   prompt.prompt(function(err, result) {
-    tf.notes = result.text;
     var form = new Form();
+    tf.notes = result.notes;
+    if (result.distribution_lists && result.distribution_lists != "") {
+      tf.distribution_lists = result.distribution_lists
+    }
+    if (result.notify !== undefined) {
+      tf.notify = result.notify === "yes" ? "True" : "False";
+    } else {
+      tf.notify = tf.notify ? "True" : "False";
+    }
+
     _.keys(tf).forEach(function(k) {
       form.append(k, tf[k]);
     });
