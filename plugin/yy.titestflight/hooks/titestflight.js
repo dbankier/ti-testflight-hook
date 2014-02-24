@@ -3,6 +3,7 @@ var _ = require("underscore"),
     afs = require("node-appc").fs,
     path = require("path"),
     Form = require("form-data"),
+    archiver = require('archiver'),
     fields = require("fields");
 
 exports.cliVersion = '>=3.2';
@@ -67,6 +68,14 @@ function doTestFlight(data, finished) {
       desc: "Enter a comma separated list (or leave empty)"
     })
   }
+  if ('ios' === data.cli.argv.platform ) {
+    f.dsym= fields.select({
+      title: "dSYM",
+      desc: "Send dSYM",
+      promptLabel:"(y,n)",
+      options: ['__y__es','__n__o'],
+    });
+  }
   var prompt = fields.set(f);
 
   prompt.prompt(function(err, result) {
@@ -86,15 +95,36 @@ function doTestFlight(data, finished) {
     });
     var build_file =afs.resolvePath(path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa")));
     form.append('file', fs.createReadStream(build_file));
-   
-    logger.info("Uploading...");
-    form.submit("http://testflightapp.com/api/builds.json", function(err, res) {
-      if (err) {
-        logger.error(err);
-      } else {
-        logger.info("Uploaded successfully.")
-      }
-      finished();
-    }); 
+
+    var dsym_path = path.join(data.cli.argv["project-dir"], 'build', 'iphone','build', 'Release-iphoneos',data.buildManifest.name + ".app.dSYM");
+    if (result.dsym === "yes" && fs.existsSync(dsym_path)) {
+      logger.info("dSYM found");
+      var dsym_zip = dsym_path + ".zip";
+      var output = fs.createWriteStream(dsym_zip);
+      var archive = archiver('zip');
+      output.on('close', function() {
+        logger.info("dSYM zipped");
+        form.append('dsym',fs.createReadStream(dsym_zip));
+        submit(form, finished);
+      });
+      archive.on('error', function(err) { throw err; });
+      archive.pipe(output);
+      archive.bulk([{expand:true, cwd: dsym_path, src:['**']}]);
+      archive.finalize();
+    } else {
+      submit(form, finished);
+    }
   });
 };
+
+function submit(form, callback) {
+  logger.info("Uploading...");
+  form.submit("http://testflightapp.com/api/builds.json", function(err, res) {
+    if (err) {
+      logger.error(err);
+    } else {
+      logger.info("Uploaded successfully.")
+    }
+    callback();
+  }); 
+}
