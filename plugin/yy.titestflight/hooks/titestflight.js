@@ -4,57 +4,61 @@ var _ = require("underscore"),
     path = require("path"),
     Form = require("form-data"),
     archiver = require('archiver'),
+    mktemp = require('mktemp'),
+    editor = require('editor'),
     fields = require("fields");
 
 exports.cliVersion = '>=3.2';
-var logger;
+var logger, form, platform, config;
 exports.init = function (_logger, config, cli, appc) {
   if (process.argv.indexOf('--test-flight') !== -1 || process.argv.indexOf('--testflight') !== -1) {
+    cli.addHook('build.pre.compile',configure);
     cli.addHook('build.finalize', doTestFlight); 
   }
   logger = _logger;
 }
 
-function doTestFlight(data, finished) {
+function configure(data,finished) {
   
-  if (data.buildManifest.outputDir === undefined) {
+  /* 
+   *  configuration/error checking
+   */
+  platform =  data.cli.argv.platform;
+
+  if (data.buildManifest.outputDir === undefined && data.iosBuildDir === undefined) {
     logger.error("Output directory must be defined to use --testflight flag");
-    finished();
     return;
   }
-
-  if (['android', 'ios'].indexOf(data.cli.argv.platform) === -1) {
+  if (['android', 'ios'].indexOf(platform) === -1) {
     logger.error("Only android and ios support with --testflight flag");
-    finished();
     return;
   }
 
   var keys = _.keys(data.tiapp.properties).filter(function(e) { return e.match("^testflight\.");});
-  var tf = {};
+  config = {};
   keys.forEach(function(k) {
-    tf[k.replace(/^testflight\./,'')] = data.tiapp.properties[k].value;
+    config[k.replace(/^testflight\./,'')] = data.tiapp.properties[k].value;
   });
-  if (tf.api_token === undefined) {
+  if (config.api_token === undefined) {
     logger.error("testflight.api_token is missing.");
-    finished();
     return;
   } 
-  if (tf.team_token === undefined) {
+  if (config.team_token === undefined) {
     logger.error("testflight.team_token is missing.");
-    finished();
     return;
   } 
-  tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists', 'dsym');
+  var tmpFile = mktemp.createFileSync('XXXXXXXXXXX');
+  editor(tmpFile, function(code,sig) {
+    config.notes = fs.readFileSync(tmpFile).toString();
+    doPrompt(data, finished);
+  });
+}
+
+function doPrompt(data, callback) {
+  config = _.pick(config, 'api_token','team_token', 'notify', 'distribution_lists', 'dsym', 'notes');
   var f = {
-    notes: fields.text({
-      title: "Release Notes",
-      desc: "Enter released notes. Required.",
-      validate: function(value,callback) {
-        callback(!value.length, value);
-      }
-    })
   };
-  if (tf.notify === undefined) {
+  if (config.notify === undefined) {
     f.notify= fields.select({
       title: "Notify",
       desc: "Notify list on upload",
@@ -62,13 +66,13 @@ function doTestFlight(data, finished) {
       options: ['__y__es','__n__o'],
     });
   } 
-  if (tf.distribution_lists === undefined) {
+  if (config.distribution_lists === undefined) {
     f.distribution_lists = fields.text({
       title: "Distribution Lists",
       desc: "Enter a comma separated list (or leave empty)"
     })
   }
-  if ('ios' === data.cli.argv.platform && tf.dsym === undefined) {
+  if ('ios' === data.cli.argv.platform && config.dsym === undefined) {
     f.dsym= fields.select({
       title: "dSYM",
       desc: "Send dSYM",
@@ -77,29 +81,33 @@ function doTestFlight(data, finished) {
     });
   }
   var prompt = fields.set(f);
-
   prompt.prompt(function(err, result) {
-    var form = new Form();
-    tf.notes = result.notes;
+    form = new Form();
     if (result.distribution_lists && result.distribution_lists != "") {
-      tf.distribution_lists = result.distribution_lists
+      config.distribution_lists = result.distribution_lists
     }
     if (result.notify !== undefined) {
-      tf.notify = result.notify === "yes" ? "True" : "False";
+      config.notify = result.notify === "yes" ? "True" : "False";
     } else {
-      tf.notify = tf.notify ? "True" : "False";
+      config.notify = config.notify ? "True" : "False";
     }
-
-    _.keys(tf).forEach(function(k) {
+    if (result.dsym === "yes") {
+      config.dsym = true;
+    }
+    _.keys(config).forEach(function(k) {
       if(k !== 'dsym') {
-        form.append(k, tf[k]);
+        form.append(k, config[k]);
       }
     });
-    var build_file =afs.resolvePath(path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa")));
+    callback();
+  });
+}
+function doTestFlight(data, finished) {
+      var build_file =afs.resolvePath(path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa")));
     form.append('file', fs.createReadStream(build_file));
 
     var dsym_path = path.join(data.cli.argv["project-dir"], 'build', 'iphone','build', 'Release-iphoneos',data.buildManifest.name + ".app.dSYM");
-    if ((result.dsym === "yes" || tf.dsym === true) && fs.existsSync(dsym_path)) {
+    if (config.dsym === true && fs.existsSync(dsym_path)) {
       logger.info("dSYM found");
       var dsym_zip = dsym_path + ".zip";
       var output = fs.createWriteStream(dsym_zip);
@@ -116,7 +124,9 @@ function doTestFlight(data, finished) {
     } else {
       submit(form, finished);
     }
-  });
+
+
+
 };
 
 function submit(form, callback) {

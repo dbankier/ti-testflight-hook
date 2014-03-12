@@ -26,6 +26,8 @@
     "form-data": "~0.1.2",
     "fields": "~0.1.12",
     "node-appc": "~0.2.0",
-    "archiver": "~0.6.1"
+    "archiver": "~0.6.1",
+    "editor": "~0.1.0",
+    "mktemp": "~0.3.4"
   }
 }
