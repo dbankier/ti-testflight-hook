@@ -38,9 +38,10 @@ These are optional:
   <property name="testflight.notify" type="bool">true</property>
   <property name="testflight.distribution_lists">Internal, QA</property>
   <property name="testflight.dsym" type="bool">true</property>
+  <property name="testflight.release_notes_file">testflight_release_notes.txt</property>
 ~~~
 
-**You will be prompted for the release notes.**
+**You will be prompted for the release notes if no file is specified. The release notes file is deleted after each build.**
 
 Then use the `--testflight` flag with the titanium cli to upload to TestFlight. For example:
 
