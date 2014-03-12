@@ -44,7 +44,7 @@ function doTestFlight(data, finished) {
     finished();
     return;
   } 
-  tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists');
+  tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists', 'dsym');
   var f = {
     notes: fields.text({
       title: "Release Notes",
@@ -68,7 +68,7 @@ function doTestFlight(data, finished) {
       desc: "Enter a comma separated list (or leave empty)"
     })
   }
-  if ('ios' === data.cli.argv.platform ) {
+  if ('ios' === data.cli.argv.platform && tf.dsym === undefined) {
     f.dsym= fields.select({
       title: "dSYM",
       desc: "Send dSYM",
@@ -91,13 +91,15 @@ function doTestFlight(data, finished) {
     }
 
     _.keys(tf).forEach(function(k) {
-      form.append(k, tf[k]);
+      if(k !== 'dsym') {
+        form.append(k, tf[k]);
+      }
     });
     var build_file =afs.resolvePath(path.join(data.buildManifest.outputDir, data.buildManifest.name + "." + (data.cli.argv.platform === "android" ? "apk" : "ipa")));
     form.append('file', fs.createReadStream(build_file));
 
     var dsym_path = path.join(data.cli.argv["project-dir"], 'build', 'iphone','build', 'Release-iphoneos',data.buildManifest.name + ".app.dSYM");
-    if (result.dsym === "yes" && fs.existsSync(dsym_path)) {
+    if ((result.dsym === "yes" || tf.dsym === true) && fs.existsSync(dsym_path)) {
       logger.info("dSYM found");
       var dsym_zip = dsym_path + ".zip";
       var output = fs.createWriteStream(dsym_zip);

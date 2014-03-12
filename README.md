@@ -37,6 +37,7 @@ These are optional:
 ~~~
   <property name="testflight.notify" type="bool">true</property>
   <property name="testflight.distribution_lists">Internal, QA</property>
+  <property name="testflight.dsym" type="bool">true</property>
 ~~~
 
 **You will be prompted for the release notes.**
