@@ -44,16 +44,27 @@ function doTestFlight(data, finished) {
     finished();
     return;
   } 
-  tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists', 'dsym');
-  var f = {
-    notes: fields.text({
+
+  tf = _.pick(tf, 'api_token','team_token', 'notify', 'distribution_lists', 'dsym', 'release_notes_file');
+  var f = {};
+  var release_notes_path = afs.resolvePath(path.join(data.buildManifest.outputDir), ''+tf.release_notes_file);
+
+  if (fs.existsSync(release_notes_path)) {
+    tf.notes = fs.readFileSync(release_notes_path);
+    fs.unlink(release_notes_path);
+  } else {
+    logger.error('Release note file not found (' + release_notes_path + ')');
+  }
+
+  if (_.isEmpty(tf.notes)) {
+    f.notes = fields.text({
       title: "Release Notes",
-      desc: "Enter released notes. Required.",
+      desc: "Enter release notes (required)",
       validate: function(value,callback) {
         callback(!value.length, value);
       }
-    })
-  };
+    });
+  }
   if (tf.notify === undefined) {
     f.notify= fields.select({
       title: "Notify",
@@ -80,7 +91,13 @@ function doTestFlight(data, finished) {
 
   prompt.prompt(function(err, result) {
     var form = new Form();
-    tf.notes = result.notes;
+
+    if (_.isEmpty(tf.notes)) {
+      tf.notes = result.notes;
+    } else {
+      logger.info("Release notes file found");
+    }
+
     if (result.distribution_lists && result.distribution_lists != "") {
       tf.distribution_lists = result.distribution_lists
     }
